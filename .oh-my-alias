@@ -1,0 +1,435 @@
+#!/usr/bin/env zsh
+
+
+# bash is like the destop version of javascript
+
+# $SHELL is unreliable as it just returns the defualt shell
+SHELL_NAME=$(ps -p $$ -o comm=)
+
+#works on all unix platforms
+# function: hascmd( cmd(s) ) -> 0 (true), 1 (false)
+hascmd(){    
+        command -v "$@" &> /dev/null        
+        return $?        
+}
+
+# classic bash will throw an error if there is a space 
+# in between the alias and the '=' sign, i.e. 
+#	alias hello= 'echo hello' ###ERROR
+# If the way we set aliaes was a function we dont have to worry about this
+# sets an alias regardless if a cmd alread exists
+# function hard_alias(alias, source_cmd) -> void ret
+hard_alias(){
+	alias "$1"="$2" 
+}
+
+hard_alias "nocmd" "! hascmd"
+
+#sets alias if "alias" (cmd, alias, func, gibberish) does not already exist
+# function: soft_alias(alias, source_cmd) -> void ret
+soft_alias(){
+	nocmd "$1" && alias "$1"="$2"
+}
+
+alias_commen_postfixes(){
+	for cmd in "$@"; do
+        	for ex in "~" ".." "." "-"; do
+        		alias "$cmd$ex"="$cmd $ex";
+        	done;
+        done
+}
+
+# In the C/C++ lang you can do the following:
+# printf(
+#	"Hello world!\n"
+#	"This is another line!\n"
+# );
+# In bash printf the aformentiond would just print "Hello world!\n" to stdout
+# function: cprintf(str) -> ret printf success/failure
+cprintf(){
+	result=""
+	for str in "$@"; do
+		#result += str
+		result="$result$str"
+	done
+	printf "$result"
+	return $?
+}
+
+#define function if nothing of 'name' has been defined
+# $1 = 'name'
+# $2 = '(){ ... }'
+# function: soft_function(cmd_name, cmd_body) -> no ret
+soft_function(){
+	nocmd $1 && source <(echo '$1 $2')
+}
+
+#after typing this so many times you'd think i'd learn
+#uncomment if you don't care about spelling
+#soft_alias "alais" "alias"
+
+#hard_alias rm		'rmtrash'
+
+# do not delete / or prompt if deleting more than 3 files at a time #
+hard_alias rm	 	'rm    -vI --preserve-root'
+
+# confirmation #
+hard_alias mv 		'mv    -vi'
+hard_alias cp 		'cp    -vi'
+hard_alias ln 		'ln    -vi'
+hard_alias mkdir 	"mkdir -v"
+hard_alias pkill	"pkill -ie"
+hard_alias diff		'colordiff -W $(tput cols)' # diff doesn't know how many colems are avalible
+hascmd batcat && hard_alias cat "batcat -pp"
+
+# Parenting changing perms on / #
+hard_alias "chown" 	'chown -c --preserve-root'
+hard_alias "chmod" 	'chmod -c --preserve-root'
+hard_alias "chgrp" 	'chgrp -c --preserve-root'
+
+# alias chmod commands
+soft_alias "mx"  'chmod a+x'
+soft_alias "000" 'chmod -R 000'		# 000 <file_name or directory>
+soft_alias "644" 'chmod -R 644'		# 644 <file_name or directory>
+soft_alias "666" 'chmod -R 666'		# 666 <file_name or directory>
+soft_alias "755" 'chmod -R 755'		
+soft_alias "777" 'chmod -R 777'
+
+hascmd wget && \
+hard_alias wget 	'wget -c'	# when wget's connection is interupted continue downloading file apon executing the cmd again
+chrome(){ google-chrome "$@" </dev/null &>/dev/null; }
+soft_alias chroem	'chrome'
+soft_alias chropme	"chrome"
+soft_alias chrme	"chrome"
+hard_alias ping 	"ping -c 5" 	# ping: stop after 5 pings
+hard_alias free 	"free -h" 	# we are humans, print it in -h (human readable format)
+soft_alias untar 	"tar -vx  -f"	# untar <name.tar>
+soft_alias unbz2 	'tar -vxj -f'	# unbz2 <name.bz2>
+soft_alias ungz 	'tar -vxz -f'	# ungz  <name.gz>
+soft_alias mktar	'tar -vc  -f'	# mktar <name.tar> <source file names...>
+soft_alias mkbz2	'tar -vcj -f'	# mkbz2 <name.bz2> <source file names...>
+soft_alias mkgz		'tar -vcz -f'	# mkgz  <name.gz>  <source file names...>
+soft_alias sha1		'openssl sha1'	# sha1 	<filename>
+soft_alias include 	"source"	# include <script_file>
+soft_alias reload 	"source ~/.zshrc"
+soft_alias settings 	"gnome-control-center"
+soft_alias google	'googler'
+
+hascmd "youtube-dl" && \
+    alias "youtube-dl"='ytdl' && \
+    alias "yt-dl"="ytdl" || \
+hascmd "yt-dlp"  && \
+    alias "youtube-dl"="yt-dlp" && \
+    alias "ytdl"="yt-dlp" && \
+    alias "yt-dl"="ytdl"
+
+soft_alias cclip	'xsel -ib'
+soft_alias cpaste	'xsel -ob'
+hard_alias gdb		'gdb --tui'
+soft_alias nv-smi 	'nvidia-smi'
+soft_alias nv-settings	'nvidia-settings'
+alias_commen_postfixes "cd" "mv" "cp" "rm" "ls"
+
+#shutdown does not require a password lol
+#I'd be a shame if a coworker was to type this in your terminal randomly -_-
+#thats why sudo is here
+hard_alias "shutdown" "sudo shutdown -h now" #the linux way of shutting down is waiting a minute - I an't got time for that
+
+# Alias's for safe and forced reboots
+soft_alias "rebootsafe"  'sudo shutdown -r now'
+soft_alias "rebootforce" 'sudo shutdown -r -n now'
+
+# Directory Aliases
+soft_alias "home" 	"cd ~"
+soft_alias "downloads" 	"cd ~/Downloads"
+soft_alias "download" 	"downloads"
+soft_alias "downlaods" 	"downloads"
+soft_alias "downlaod" 	"downloads"
+soft_alias "downlods" 	"downloads"
+soft_alias "downlodds" 	"downloads"
+soft_alias "down" 	"downloads"
+
+# zsh already does this
+[ SHELL_NAME = "bash" ] && \
+soft_alias "~" 		"cd ~"
+
+soft_alias "back" 	"cd -"
+
+# ubuntu package manager aliases
+# 	> "sudo — execute a command as another user"
+#	The reason alias "snap" -> "sudo snap" does not result in an infinate loop
+#	is becuase Switch User DO opens a shell for the root user; When you log into root
+#	it exacues /root/.bashrc (if it exists). In my case I don't have one. 
+#	Do not put this in /root/.bashrc.
+hard_alias snap			"brew"
+hard_alias apt 			"brew"
+hard_alias apt-get 		"apt-get"
+soft_alias update 		"apt update"
+soft_alias upgrade 		"apt upgrade"
+soft_alias full-upgrade	"apt full-upgrade"
+soft_alias purge		"apt purge"
+soft_alias remove		"apt remove"
+soft_alias autoremove	"apt autoremove"
+soft_alias uninstall	"apt remove"
+soft_alias remove		"apt remove"
+hard_alias install		"apt install"
+soft_alias list         "/usr/bin/apt list"
+soft_alias search       "/usr/bin/apt search"
+soft_alias upgradeable  "/usr/bin/apt list --upgradeable"
+soft_alias installed    "/usr/bin/apt list --installed"
+
+## a quick way to get out of current directory ##
+soft_alias "1d" 'cd ..'
+soft_alias "2d" 'cd ../..'
+soft_alias "3d" 'cd ../../..'
+soft_alias "4d" 'cd ../../../..'
+soft_alias "5d" 'cd ../../../../..'
+soft_alias "6d" 'cd ../../../../../..'
+soft_alias "7d" 'cd ../../../../../../..'
+soft_alias "8d" 'cd ../../../../../../../..'
+soft_alias "9d" 'cd ../../../../../../../../..'
+
+soft_alias "d1" "1d"
+soft_alias "d2" "2d"
+soft_alias "d3" "3d"
+soft_alias "d4" "4d"
+soft_alias "d5" "5d"
+soft_alias "d6" "6d"
+soft_alias "d7" "7d"
+soft_alias "d8" "8d"
+soft_alias "d9" "9d"
+
+soft_alias ".1" "1d"
+soft_alias ".2" "2d"
+soft_alias ".3" "3d"
+soft_alias ".4" "4d"
+soft_alias ".5" "5d"
+soft_alias ".6" "6d"
+soft_alias ".7" "7d"
+soft_alias ".8" "8d"
+
+soft_alias "1." ".1"
+soft_alias "2." ".2"
+soft_alias "3." ".3"
+soft_alias "4." ".4"
+soft_alias "5." ".5"
+soft_alias "6." ".6"
+soft_alias "7." ".7"
+soft_alias "8." ".8"
+soft_alias "9." ".9"
+
+#on most systems ".." is already a defined cmd to go to the
+#parent diectory
+nocmd zsh && \
+soft_alias ".." "1d"
+
+soft_alias "..." 	"2d"
+soft_alias "...." 	"3d"
+soft_alias "....." 	"4d"
+soft_alias "......" 	"5d"
+soft_alias "......." 	"6d"
+soft_alias "........" 	"7d"
+soft_alias "........." 	"8d"
+soft_alias ".........." "9d"
+
+
+hascmd exa && hard_alias ls "exa" || hard_alias ls 'ls --color=auto'
+l-dot-hidden(){ exa -I $(for h in $(cat .hidden 2> /dev/null); do printf "$h|"; done) "$@" 2> /dev/null || exa "$@"; }		
+alias l=l-dot-hidden
+hard_alias la		'/bin/ls -lAh --color=auto'
+soft_alias l.	 	'ls -d .*' 		# print all hidden files
+soft_alias l1	 	"ls -1"			# print items vertically
+soft_alias lx 		'ls -lhXB' 		# sort by extension
+soft_alias lk	 	'ls -lhSr' 		# sort by size
+soft_alias lc	 	'ls -lhcr' 		# sort by change time
+soft_alias lu	 	'ls -hurl' 		# sort by access time
+soft_alias lr	 	'ls -lhR' 		# recursive ls
+soft_alias lt	 	'ls -lhtr' 		# sort by date
+soft_alias lm	 	'ls -hall | more' 	# pipe through 'more'
+soft_alias lw 		'/bin/ls --color=auto -xhA' 		# wide listing format
+soft_alias ll	 	'ls -lFs' 		# long listing format
+soft_alias labc		'ls -clap' 		# alphabetical sort
+#ldir () { tree -CupidDhg -L 1 "$@" | tail +2; }
+soft_alias ldir		'exa -D' 
+soft_alias lf 		'exa -I $(for d in $(exa -Da); do printf "$d|"; done)'
+soft_alias lfile	"lf"
+# note: ld is the GNU Linker - do not make an 'ls' alias that is 'ld',
+# or you will have, whats called, "A bad time."
+
+soft_alias tk           'tree --sort=size -h'   # sort by size    
+soft_alias lu           'ls -lhur'              # sort by access time    
+soft_alias lr           'ls -lhR'               # recursive ls    
+soft_alias lt           'ls -lhtr'              # sort by date    
+soft_alias lm           'ls -lha |more'         # pipe through 'more'    
+soft_alias lw           'ls -xhA'               # wide listing format    
+soft_alias ll           'ls -lFs'               # long listing format    
+soft_alias labc         'ls -lap'               # alphabetical sort
+
+alias_commen_postfixes 	\
+	"ls" 		\
+	"l."		\
+	"lx"		\
+	"lk"		\
+	"lc"		\
+	"lu"		\
+	"lr"		\
+	"lt"		\
+	"lm"		\
+	"lw"		\
+	"ll"		\
+	"labc"		\
+	"lf"		\
+	"ldir"		\
+	"lfile"
+
+#the alias sl gets in the way of the sl -> steam locomotive command
+# :(
+# hascmd sl ?  alias sl="sl -e" (true)  : alias sl="ls" (false)
+  hascmd sl && hard_alias "sl" "sl -e" || soft_alias "sl" "ls"
+alias_commen_postfixes "sl"
+
+soft_alias "a" "alias"			# alias  something quickly
+soft_alias "c" "clear"			# clear  terminal screen
+soft_alias "p" "pwd"			# Print  Working Directory
+soft_alias "e" "exit"			# exit   termainal
+soft_alias "q" "exit"			# quit   termianl
+soft_alias "h" "history"		# print  history
+soft_alias "b" "back"			# back   to the directory you were just in
+#soft_alias "r" "reload"			# reload ~/.zshrc (aka source ~/.zshrc)
+soft_alias "f" "find . | grep "		# find   <file or dir name>
+soft_alias "p" "ps aux | grep "		# Search running processes
+
+soft_alias favcppcompier="g++"
+compilecpp(){
+        ex="$(basename "$1" | sed 's/\(.*\)\..*/\1/')"
+        favcppcompier -std=c++2a "$@" -o "$ex" && ./$ex
+}
+
+soft_alias "c++" "compilecpp"
+
+[ SHELL_NAME = "zsh" ] && soft_alias "$" ""
+
+soft_alias root			"sudo su"
+soft_alias "cls" 		"clear"		# many configurations have this alias; This is included to help with anyone else using the system
+soft_alias "whereami" 		"pwd"		# Print Working Directory
+soft_alias "whattimeisit" 	"date +'%r %Z'"
+soft_alias "quit" 		"exit"
+soft_alias "goodbye" 		"quit"
+soft_alias "godbye" 		"goodbye"
+soft_alias "goodnight" 		"quit"
+soft_alias "godnight" 		"goodnight"
+
+#			   #ribbit
+hascmd grep && soft_alias "gerp" "grep"
+
+if hascmd vim || hascmd nvim
+then
+        alias :w='echo "You are not editing a file"'
+        alias ::w=":w"
+        alias ::ww=":w"
+        alias :ww=":w"
+
+        alias :wq=":w"
+        alias :wwq=":wq"
+        alias :wqq=":wq"
+        alias :wwqq=":wq"
+        alias ::wwq=":wq"
+        alias ::wwqq=":wq"
+        alias ::wq=":wq"
+
+        alias :q="q"
+fi
+
+#ABSOLUTELY NESSESSARYU TO RUN LINUX CERNEL
+if hascmd cowsay; then
+	str="moo"
+        for i in {0..100}; do
+		hard_alias $str "cowsay '$str'"
+		str="$str""o" # str += 'o'
+	done
+fi
+
+hascmd python3 && soft_alias "py3" 	"python3"
+hascmd python3 && soft_alias "python" 	"python3"
+
+if hascmd python && nocmd py
+then
+        alias py="python"
+        alias pthon="py"
+        alias pyython="py"
+fi
+
+if hascmd youtube-dl
+then
+        alias "download-video"="youtube-dl"
+        alias vget="download-video"
+fi
+
+# certian scripts use sudo instead of doas
+hascmd doas && soft_alias "sudo" "doas"
+
+if ! hascmd path
+then
+        path(){
+                if [[ $# -eq 0 ]]
+                then
+                        echo "The current working directory is \"$PWD\""
+                else
+                        command -V "$@"
+                fi
+        }
+fi
+
+# conditionally define function based on if something alread has its name
+#soft_function \
+#mkcd '(){
+#	mkdir -p "$1" && cd "$1"
+#}'
+
+
+fabulous(){
+	#the only downside of the python multiline approach is you can't use the character (')
+	python -c 'print(
+		r"                      __........_.._....._" 					"\n"
+		r"                     `.s$^.s$$$$$ssss$$$$$$bso.a" 				"\n"
+		r"                     .d  7.d$$$$SSSS$$$$$$$$$$$b._" 				"\n"
+		r"                     $  7 s`  `SSS$$$$$SSSSSSSSSSSSSSb." 			"\n"
+		r"                     $  j`      SS$$$$$$$$$$$$$$$sss$$$b" 			"\n"
+		r"                     T.`        s$$$$$$$$$$$$$$$$$ss$$$$$bs." 		"\n"
+		r"                     .          S$$$$$$$$$$$$$$$$$$s$$$$$$$$$s." 		"\n"
+		r"                    /..._      dS$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$s." 		"\n"
+		r"                  .-````^:.    S$$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$$$$b" 	"\n"
+		r"           __..-=`   .-   `.  dS$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$$$$$$b" 	"\n"
+		r"        .``        _/_        S$$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$$$$$$$b" 	"\n"
+		r"        :_         `^s$D     dS$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$$$$$$$$$l" 	"\n"
+		r"         :\                  !!$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$$$$$$$$$S" 	"\n"
+		r"         :`--`               `:$$$$$$$$$$$$$$$$$$s$$$$$$$$$$$$$$$$$$$$S" 	"\n"
+		r"       .-`  .`                 d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$7" 	"\n"
+		r"       ::   :                 d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$b" 	"\n"
+		r"      :::.   `               .q$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$b" 	"\n"
+		r"     :`  ``                 dS77$$$$$$$7^^^^q$$$$$$$$$$$$$$$$$$$$$$$$$$$:" 	"\n"
+		r"   .`                     dSP.P`  ```s7 `` : \$$$$$$$$$$$$$$$$$$$$$$$$$$$" 	"\n"
+		r"   :                    sP .dP     _.7/\    `:$$$$$$$$$$$$$$$$$$$$$$$$$$$" 	"\n"
+		r"   \                  dP`dSP   . (` $$  : .` d$$$$$$$$$$$$$$$$$$$$$$$$$$7" 	"\n"
+		r"    `._              s dP`     l  d77-. ./.d$$$$$$$$$$$$$$$$$$$$$$$$$$$7b" 	"\n"
+		r"       `.--...__    :sP`        `d7_ ``_.d$$$$$$$$$$$$$$$$$$$$$$$$$$$7`.$:" 	"\n"
+		r"         `.     ``  :`        .77:::sssd$$$$$$$$$$$$$$$$$$$$$$$$$$$$$bsd$`" 	"\n"
+		r"           `,              _.:`` ``::d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$^7$P" 	"\n"
+		r"             \          _.-``     .d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Dd$d7" 	"\n"
+		r"              \                 d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$P`d77" 	"\n"
+		r"               :              d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$P 7 7" 	"\n"
+		r"               :            d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$P `.`" 	"\n"
+		r"                :         .d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$7.-²`" 	"\n"
+		r"                :         d$$$7`        `q$$$$$$$$$$$$$$$$$$$$7`" 		"\n"
+		r"                 \       $$               `q$$$$$$P`   ```````" 		"\n"
+		r"                  \     $$                   `````" 				"\n"
+		r"                   :    qp       _.-" 					"\n"
+		r"                    `.   l    .-`" 						"\n"
+		r"                      `.     -" 						"\n"
+		r"                        `.  /" 						"\n"
+		r"                          `|" 						"\n"
+	, end="")'
+}
+soft_alias "nproc" "sysctl -n hw.physicalcpu"
+alias "rp"="rp -uuuzi --threads=$(nproc)"
+alias 'make'='make -j20'
