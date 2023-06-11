@@ -12,6 +12,8 @@ hascmd(){
         command -v "$@" &> /dev/null        
         return $?        
 }
+# Test for which operating system we are running on
+#[[ `echo "$OSNAME"` != "" ]] && echo "$OSNAME" || uname -s
 
 # classic bash will throw an error if there is a space 
 # in between the alias and the '=' sign, i.e. 
@@ -79,8 +81,12 @@ hard_alias cp 		'cp    -vi'
 hard_alias ln 		'ln    -vi'
 hard_alias mkdir 	"mkdir -v"
 hard_alias pkill	"pkill -ie"
-hard_alias diff		'colordiff -W $(tput cols)' # diff doesn't know how many colems are avalible
-hascmd batcat && hard_alias cat "batcat -pp"
+
+hascmd colordiff && \
+hard_alias diff 'colordiff -W $(tput cols)' # diff doesn't know how many columns are avalible
+
+hascmd batcat && \
+hard_alias cat "batcat -pp"
 
 # Parenting changing perms on / #
 hard_alias "chown" 	'chown -c --preserve-root'
@@ -97,10 +103,10 @@ soft_alias "777" 'chmod -R 777'
 
 hascmd wget && \
 hard_alias wget 	'wget -c'	# when wget's connection is interupted continue downloading file apon executing the cmd again
-chrome(){ google-chrome "$@" </dev/null &>/dev/null; }
-soft_alias chroem	'chrome'
-soft_alias chropme	"chrome"
-soft_alias chrme	"chrome"
+#chrome(){ google-chrome "$@" </dev/null &>/dev/null; }
+#soft_alias chroem	'chrome'
+#soft_alias chropme	"chrome"
+#soft_alias chrme	"chrome"
 hard_alias ping 	"ping -c 5" 	# ping: stop after 5 pings
 hard_alias free 	"free -h" 	# we are humans, print it in -h (human readable format)
 soft_alias untar 	"tar -vx  -f"	# untar <name.tar>
@@ -109,9 +115,12 @@ soft_alias ungz 	'tar -vxz -f'	# ungz  <name.gz>
 soft_alias mktar	'tar -vc  -f'	# mktar <name.tar> <source file names...>
 soft_alias mkbz2	'tar -vcj -f'	# mkbz2 <name.bz2> <source file names...>
 soft_alias mkgz		'tar -vcz -f'	# mkgz  <name.gz>  <source file names...>
+
+hascmd openssl && \
 soft_alias sha1		'openssl sha1'	# sha1 	<filename>
 soft_alias include 	"source"	# include <script_file>
-soft_alias reload 	"source ~/.zshrc"
+
+soft_alias reload 	"source ~/.bashrc"
 soft_alias settings 	"gnome-control-center"
 soft_alias google	'googler'
 
